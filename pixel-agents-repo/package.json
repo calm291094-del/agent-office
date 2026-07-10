@@ -1,23 +1,23 @@
 {
-  "name": "pixel-agents-web",
+  "name": "pixel-agents-repo",
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
+  "workspaces": [
+    "core",
+    "server",
+    "webview-ui"
+  ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:ui\"",
-    "dev:server": "node standalone-server/index.js",
-    "dev:ui": "cd webview-ui && npm run dev",
-    "build": "npm run build:ui && npm run build:server",
-    "build:ui": "cd webview-ui && npm run build",
-    "build:server": "echo 'Server no necesita build'",
-    "start": "node standalone-server/index.js"
+    "build": "npm run build:core && npm run build:server && npm run build:webview",
+    "build:core": "cd core && npm run build",
+    "build:server": "cd server && npm run build",
+    "build:webview": "cd webview-ui && npm run build",
+    "start": "node dist/cli.js --port $PORT --host 0.0.0.0",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:webview\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:webview": "cd webview-ui && npm run dev"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
     "concurrently": "^8.0.0"
-  },
-  "workspaces": [
-    "webview-ui",
-    "server"
-  ]
+  }
 }
