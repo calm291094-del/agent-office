@@ -88,93 +88,99 @@ app.get('/', (req, res) => {
     </div>
 
     <script>
-        const API_URL = 'https://agent-office-z916.onrender.com';
-        let agents = [];
+        // 🔥 CONFIGURACIÓN - CAMBIA ESTA URL POR LA DE TU BACKEND
+        var API_URL = 'https://agent-office-z916.onrender.com';
+        var agents = [];
 
         async function cargarAgentes() {
             try {
-                const res = await fetch(API_URL + "/api/agents");
-                const data = await res.json();
+                var res = await fetch(API_URL + '/api/agents');
+                var data = await res.json();
                 agents = data;
                 renderAgentes();
-                document.getElementById("agent-count").textContent = agents.length + " Agentes";
+                document.getElementById('agent-count').textContent = agents.length + ' Agentes';
             } catch (e) {
-                console.error("Error cargando agentes:", e);
+                console.error('Error cargando agentes:', e);
             }
         }
 
         function renderAgentes() {
-            const container = document.getElementById("agents-container");
+            var container = document.getElementById('agents-container');
             if (agents.length === 0) {
-                container.innerHTML = "<p style=\"color:#475569;grid-column:1/-1;text-align:center;padding:20px;\">No hay agentes aún. Crea uno!</p>";
+                container.innerHTML = '<p style="color:#475569;grid-column:1/-1;text-align:center;padding:20px;">No hay agentes aún. Crea uno!</p>';
                 return;
             }
-            container.innerHTML = agents.map(function(a) {
-                var statusClass = a.status === "working" ? "status-working" : 
-                                  a.status === "thinking" ? "status-thinking" : "status-idle";
-                var statusText = a.status === "working" ? "🔧 Trabajando" : 
-                                 a.status === "thinking" ? "🧠 Pensando" : "💤 Inactivo";
-                return "<div class=\"agent-card\">" +
-                    "<div class=\"icon\">🤖</div>" +
-                    "<div class=\"name\">" + a.name + "</div>" +
-                    "<div class=\"role\">" + a.role + "</div>" +
-                    "<span class=\"status " + statusClass + "\">" + statusText + "</span>" +
-                    "<div style=\"margin-top:8px;font-size:0.65rem;color:#475569;\">" + 
+            var html = '';
+            for (var i = 0; i < agents.length; i++) {
+                var a = agents[i];
+                var statusClass = a.status === 'working' ? 'status-working' : 
+                                  a.status === 'thinking' ? 'status-thinking' : 'status-idle';
+                var statusText = a.status === 'working' ? '🔧 Trabajando' : 
+                                 a.status === 'thinking' ? '🧠 Pensando' : '💤 Inactivo';
+                html += '<div class="agent-card">' +
+                    '<div class="icon">🤖</div>' +
+                    '<div class="name">' + a.name + '</div>' +
+                    '<div class="role">' + a.role + '</div>' +
+                    '<span class="status ' + statusClass + '">' + statusText + '</span>' +
+                    '<div style="margin-top:8px;font-size:0.65rem;color:#475569;">' + 
                     new Date(a.created_at).toLocaleDateString() + 
-                    "</div>" +
-                "</div>";
-            }).join("");
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
         }
 
         async function crearAgente() {
-            var name = prompt("Nombre del agente:", "Agente " + (agents.length + 1));
+            var name = prompt('Nombre del agente:', 'Agente ' + (agents.length + 1));
             if (!name) return;
-            var role = prompt("Rol del agente:", "Asistente");
+            var role = prompt('Rol del agente:', 'Asistente');
             try {
-                var res = await fetch(API_URL + "/api/agents", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name: name, role: role || "Asistente" })
+                var res = await fetch(API_URL + '/api/agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, role: role || 'Asistente' })
                 });
                 var data = await res.json();
                 await cargarAgentes();
-                agregarChat("Sistema", "✅ Agente \"" + data.name + "\" creado");
+                agregarChat('Sistema', '✅ Agente "' + data.name + '" creado');
             } catch (e) {
-                alert("Error al crear agente");
+                alert('Error al crear agente');
+                console.error(e);
             }
         }
 
         function agregarChat(usuario, mensaje) {
-            var area = document.getElementById("chat-area");
-            var div = document.createElement("div");
-            div.className = "message";
-            var cls = usuario === "Sistema" ? "user" : "agent";
-            div.innerHTML = "<span class=\"" + cls + "\">" + usuario + ":</span> " + mensaje;
+            var area = document.getElementById('chat-area');
+            var div = document.createElement('div');
+            div.className = 'message';
+            var cls = usuario === 'Sistema' ? 'user' : 'agent';
+            div.innerHTML = '<span class="' + cls + '">' + usuario + ':</span> ' + mensaje;
             area.appendChild(div);
             area.scrollTop = area.scrollHeight;
         }
 
         function enviarMensaje() {
-            var input = document.getElementById("chat-input");
+            var input = document.getElementById('chat-input');
             var msg = input.value.trim();
             if (!msg) return;
-            input.value = "";
-            agregarChat("Administrador", msg);
+            input.value = '';
+            agregarChat('Administrador', msg);
             
             setTimeout(function() {
                 var respuestas = [
-                    "🤖 Recibido, administrador. ¿En qué puedo ayudarte?",
-                    "📝 Anotado. ¿Necesitas que gestione algo?",
-                    "✅ ¡Entendido! Estoy trabajando en ello.",
-                    "☕ Un momento, procesando tu solicitud...",
-                    "💡 ¡Excelente idea! Voy a analizarlo."
+                    '🤖 Recibido, administrador. ¿En qué puedo ayudarte?',
+                    '📝 Anotado. ¿Necesitas que gestione algo?',
+                    '✅ ¡Entendido! Estoy trabajando en ello.',
+                    '☕ Un momento, procesando tu solicitud...',
+                    '💡 ¡Excelente idea! Voy a analizarlo.'
                 ];
                 var random = respuestas[Math.floor(Math.random() * respuestas.length)];
-                var nombre = agents.length > 0 ? agents[Math.floor(Math.random() * agents.length)].name : "Agente";
+                var nombre = agents.length > 0 ? agents[Math.floor(Math.random() * agents.length)].name : 'Agente';
                 agregarChat(nombre, random);
             }, 1000 + Math.random() * 2000);
         }
 
+        // Inicializar
         cargarAgentes();
         setInterval(cargarAgentes, 5000);
     </script>
