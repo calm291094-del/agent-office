@@ -1,7 +1,5 @@
-// webview-ui/src/eventBus.ts
 type EventMap = {
     'agent-speech': { agentId: string; text: string };
-    // Agrega más eventos aquí si es necesario
 };
 
 export const eventBus = {
