@@ -12,8 +12,11 @@
     "dev:ui": "npm run dev --workspace=webview-ui",
     "build": "npm run build --workspaces",
     "start": "npm run start --workspace=server"
+    "start": "node server.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   }
 }
