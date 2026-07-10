@@ -20,15 +20,15 @@ interface Agent {
 // ============================================================
 const SPRITE_URLS = {
     // Agentes (personajes pixel art de código abierto)
-    agent1: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/agent1.png',
-    agent2: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/agent2.png',
-    agent3: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/agent3.png',
+    agent1: 'https://via.placeholder.com/48/8b5cf6/FFFFFF?text=🤖',
+    agent2: 'https://via.placeholder.com/48/3b82f6/FFFFFF?text=🤖',
+    agent3: 'https://via.placeholder.com/48/3b82f6/FFFFFF?text=🤖',
     
     // Escritorio
-    desk: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/desk.png',
+    desk: 'https://via.placeholder.com/48/4a5563/FFFFFF?text=💻',,
     
     // Piso
-    floor: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/floor.png'
+    floor: 'https://via.placeholder.com/48/2d3748/FFFFFF?text=⬜'
 };
 
 // ============================================================
