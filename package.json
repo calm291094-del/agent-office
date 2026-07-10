@@ -1,27 +1,19 @@
 {
   "name": "agent-office",
   "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "build": "echo 'No build needed'",
-    "start:server": "node packages/server/index.js",
-    "start:ui": "node packages/ui/server.js"
-  },
-  "engines": {
-    "node": ">=18"
-  }
-}
-{
-  "scripts": {
+    "start": "node packages/server/index.js",
+    "start:ui": "node packages/ui/server.js",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:ui\"",
-    "dev:server": "node standalone-server/index.js",
-    "dev:ui": "cd webview-ui && npm run dev",
-    "build": "npm run build:ui",
-    "build:ui": "cd webview-ui && npm run build",
-    "start": "node standalone-server/index.js",
-    "setup": "npm install && cd webview-ui && npm install"
+    "dev:server": "nodemon packages/server/index.js",
+    "dev:ui": "nodemon packages/ui/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "nodemon": "^3.0.0"
   }
 }
