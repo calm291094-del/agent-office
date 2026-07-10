@@ -7,7 +7,6 @@ const WebSocket = require('ws');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -16,10 +15,10 @@ app.use(express.json());
 // ============================================================
 let agents = [
     { id: 1, name: 'Ana', role: 'CEO', status: 'working', icon: '👩‍💼', color: '#8b5cf6', x: 150, y: 150 },
-    { id: 2, name: 'Carlos', role: 'Desarrollador', status: 'thinking', icon: '👨‍💻', color: '#3b82f6', x: 350, y: 150 },
-    { id: 3, name: 'Marta', role: 'Diseñadora', status: 'idle', icon: '🎨', color: '#ec4899', x: 550, y: 150 },
+    { id: 2, name: 'Carlos', role: 'Dev', status: 'thinking', icon: '👨‍💻', color: '#3b82f6', x: 350, y: 150 },
+    { id: 3, name: 'Marta', role: 'Design', status: 'idle', icon: '🎨', color: '#ec4899', x: 550, y: 150 },
     { id: 4, name: 'Luis', role: 'Marketing', status: 'working', icon: '📊', color: '#f59e0b', x: 150, y: 350 },
-    { id: 5, name: 'Sofía', role: 'Soporte', status: 'idle', icon: '💁‍♀️', color: '#10b981', x: 350, y: 350 },
+    { id: 5, name: 'Sofía', role: 'Support', status: 'idle', icon: '💁‍♀️', color: '#10b981', x: 350, y: 350 }
 ];
 let nextId = 6;
 
@@ -29,14 +28,12 @@ let nextId = 6;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// Conexiones WebSocket
 const clients = new Set();
 
 wss.on('connection', (ws) => {
     console.log('✅ Nuevo cliente WebSocket conectado');
     clients.add(ws);
 
-    // Enviar estado inicial
     ws.send(JSON.stringify({
         type: 'init',
         agents: agents
@@ -57,7 +54,6 @@ wss.on('connection', (ws) => {
     });
 });
 
-// Manejar mensajes WebSocket
 function handleWebSocketMessage(ws, data) {
     switch (data.type) {
         case 'agent-action':
@@ -98,7 +94,6 @@ function handleWebSocketMessage(ws, data) {
     }
 }
 
-// Broadcast a todos los clientes
 function broadcastToAll(data) {
     const message = JSON.stringify(data);
     clients.forEach(client => {
@@ -111,8 +106,6 @@ function broadcastToAll(data) {
 // ============================================================
 // RUTAS API
 // ============================================================
-
-// Health check
 app.get('/api/health', (req, res) => {
     res.json({
         status: 'ok',
@@ -124,12 +117,10 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Obtener agentes
 app.get('/api/agents', (req, res) => {
     res.json(agents);
 });
 
-// Crear agente
 app.post('/api/agents', (req, res) => {
     const { name, role } = req.body;
     const newAgent = {
@@ -145,7 +136,6 @@ app.post('/api/agents', (req, res) => {
     };
     agents.push(newAgent);
     
-    // Notificar a todos los clientes
     broadcastToAll({
         type: 'agent-created',
         agent: newAgent
@@ -154,7 +144,6 @@ app.post('/api/agents', (req, res) => {
     res.status(201).json(newAgent);
 });
 
-// Cambiar estado del agente
 app.put('/api/agents/:id/status', (req, res) => {
     const id = parseInt(req.params.id);
     const { status } = req.body;
@@ -172,27 +161,6 @@ app.put('/api/agents/:id/status', (req, res) => {
     res.json(agent);
 });
 
-// Mover agente
-app.put('/api/agents/:id/move', (req, res) => {
-    const id = parseInt(req.params.id);
-    const { x, y } = req.body;
-    const agent = agents.find(a => a.id === id);
-    if (!agent) {
-        return res.status(404).json({ error: 'Agente no encontrado' });
-    }
-    agent.x = x;
-    agent.y = y;
-    
-    broadcastToAll({
-        type: 'agent-move',
-        agentId: agent.id,
-        x: agent.x,
-        y: agent.y
-    });
-    
-    res.json(agent);
-});
-
 // ============================================================
 // SERVIDOR DE ARCHIVOS ESTÁTICOS
 // ============================================================
@@ -204,27 +172,23 @@ app.get('/', (req, res) => {
 });
 
 // ============================================================
-// BUCLE DE SIMULACIÓN (movimiento automático de agentes)
+// SIMULACIÓN DE MOVIMIENTO AUTOMÁTICO
 // ============================================================
 function simulateAgentActivity() {
-    if (agents.length === 0) return;
+    if (agents.length === 0 || clients.size === 0) return;
 
-    // Elegir un agente aleatorio
     const randomIndex = Math.floor(Math.random() * agents.length);
     const agent = agents[randomIndex];
 
-    // Cambiar estado
     const statuses = ['idle', 'working', 'thinking'];
     const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
     agent.status = newStatus;
 
-    // Mover agente
     const newX = Math.max(50, Math.min(750, agent.x + (Math.random() - 0.5) * 60));
     const newY = Math.max(50, Math.min(550, agent.y + (Math.random() - 0.5) * 60));
     agent.x = newX;
     agent.y = newY;
 
-    // Broadcast de los cambios
     broadcastToAll({
         type: 'agent-move',
         agentId: agent.id,
@@ -238,7 +202,6 @@ function simulateAgentActivity() {
     });
 }
 
-// Ejecutar simulación cada 5 segundos
 setInterval(simulateAgentActivity, 5000);
 
 // ============================================================
