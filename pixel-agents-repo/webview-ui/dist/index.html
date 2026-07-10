@@ -6,61 +6,146 @@
     <title>🏢 Pixel Agents</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #0f172a; color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .container { background: #1e293b; border-radius: 20px; padding: 40px; max-width: 600px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-        h1 { font-size: 2rem; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
-        .status { background: #0d9488; padding: 8px 16px; border-radius: 8px; display: inline-block; font-size: 0.85rem; }
-        .agent-list { margin-top: 20px; display: grid; gap: 12px; }
-        .agent-item { background: #334155; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .agent-name { font-weight: 600; }
-        .agent-status { font-size: 0.75rem; padding: 2px 12px; border-radius: 20px; background: #475569; }
-        .agent-status.working { background: #0d9488; }
-        .agent-status.thinking { background: #f59e0b; color: #0f172a; }
-        .footer { margin-top: 20px; color: #94a3b8; font-size: 0.75rem; text-align: center; }
+        body { background: #0f172a; color: white; min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 12px; }
+        h1 { font-size: 2rem; display: flex; align-items: center; gap: 12px; }
+        .status-badge { background: #0d9488; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; }
+        .btn { background: #0d9488; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .btn:hover { background: #0f766e; transform: scale(1.05); }
+        .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin: 20px 0; }
+        .agent-card { background: #1e293b; border-radius: 16px; padding: 20px; text-align: center; border: 2px solid #334155; transition: all 0.3s; }
+        .agent-card:hover { transform: translateY(-4px); border-color: #0d9488; }
+        .agent-card .icon { font-size: 3rem; }
+        .agent-card .name { font-weight: 600; font-size: 1.1rem; margin-top: 8px; }
+        .agent-card .role { font-size: 0.8rem; color: #94a3b8; }
+        .agent-card .status { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 0.7rem; margin-top: 8px; font-weight: 600; }
+        .status-working { background: #0d9488; color: white; }
+        .status-thinking { background: #f59e0b; color: #0f172a; }
+        .status-idle { background: #475569; color: #94a3b8; }
+        .footer { margin-top: 30px; text-align: center; color: #64748b; font-size: 0.8rem; }
+        .footer a { color: #0d9488; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏢 Pixel Agents</h1>
-        <p>Estado: <span class="status">✅ Conectado</span></p>
-        <p style="color: #94a3b8; margin-top: 8px;">Servidor funcionando correctamente</p>
-        
-        <div class="agent-list" id="agent-list">
-            <div class="agent-item">
-                <span class="agent-name">🤖 Cargando agentes...</span>
+        <div class="header">
+            <h1>🏢 Pixel Agents</h1>
+            <div>
+                <span class="status-badge" id="agent-count">0 Agentes</span>
+                <button class="btn" onclick="crearAgente()" style="margin-left:12px;">+ Nuevo Agente</button>
+                <button class="btn" onclick="simularActividad()" style="margin-left:8px;background:#f59e0b;color:#0f172a;">🎲 Simular</button>
             </div>
         </div>
         
+        <div class="agents-grid" id="agents-container">
+            <p style="color:#475569;grid-column:1/-1;text-align:center;padding:40px;">Cargando agentes...</p>
+        </div>
+        
         <div class="footer">
-            <span>🔒 Servidor seguro</span> · 
+            <span>🔒 Servidor: <span id="server-status">✅ Conectado</span></span> · 
             <span>v1.0.0</span> · 
-            <span><a href="https://agent-office-ui.onrender.com" style="color: #0d9488; text-decoration: none;">← Volver a Agent Office</a></span>
+            <span><a href="https://agent-office-ui.onrender.com">← Volver a Agent Office</a></span>
         </div>
     </div>
     
     <script>
+        let agents = [];
+        
         async function cargarAgentes() {
             try {
                 const res = await fetch('/api/agents');
-                const data = await res.json();
-                const list = document.getElementById('agent-list');
-                if (data.agents && data.agents.length > 0) {
-                    list.innerHTML = data.agents.map(a => `
-                        <div class="agent-item">
-                            <span class="agent-name">🤖 ${a.name}</span>
-                            <span class="agent-status ${a.status}">${a.status}</span>
-                        </div>
-                    `).join('');
-                } else {
-                    list.innerHTML = '<div class="agent-item"><span class="agent-name">No hay agentes disponibles</span></div>';
-                }
+                if (!res.ok) throw new Error('Error al cargar agentes');
+                agents = await res.json();
+                renderAgentes();
+                document.getElementById('agent-count').textContent = agents.length + ' Agentes';
             } catch (e) {
                 console.error('Error:', e);
-                document.getElementById('agent-list').innerHTML = 
-                    '<div class="agent-item"><span class="agent-name">❌ Error al cargar agentes</span></div>';
+                document.getElementById('agents-container').innerHTML = 
+                    '<p style="color:#ef4444;grid-column:1/-1;text-align:center;padding:40px;">❌ Error al cargar agentes: ' + e.message + '</p>';
             }
         }
         
+        function renderAgentes() {
+            const container = document.getElementById('agents-container');
+            if (!agents || agents.length === 0) {
+                container.innerHTML = '<p style="color:#475569;grid-column:1/-1;text-align:center;padding:40px;">No hay agentes aún. ¡Crea uno!</p>';
+                return;
+            }
+            
+            let html = '';
+            agents.forEach(a => {
+                const statusClass = 'status-' + a.status;
+                const statusText = a.status === 'working' ? '🔧 Trabajando' : 
+                                   a.status === 'thinking' ? '🧠 Pensando' : '💤 Inactivo';
+                html += `
+                    <div class="agent-card" style="border-color: ${a.color || '#334155'}40;">
+                        <div class="icon">${a.icon || '🤖'}</div>
+                        <div class="name">${a.name}</div>
+                        <div class="role">${a.role}</div>
+                        <span class="status ${statusClass}">${statusText}</span>
+                        <div style="margin-top:8px;">
+                            <button onclick="cambiarEstado(${a.id})" style="background:#334155;color:white;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:0.65rem;">Cambiar Estado</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        async function crearAgente() {
+            const name = prompt('Nombre del agente:', 'Agente ' + (agents.length + 1));
+            if (!name) return;
+            const role = prompt('Rol del agente:', 'Asistente');
+            try {
+                const res = await fetch('/api/agents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, role: role || 'Asistente' })
+                });
+                if (!res.ok) throw new Error('Error al crear agente');
+                await cargarAgentes();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+        
+        async function cambiarEstado(id) {
+            const statuses = ['idle', 'working', 'thinking'];
+            const current = agents.find(a => a.id === id);
+            if (!current) return;
+            const currentIndex = statuses.indexOf(current.status);
+            const newStatus = statuses[(currentIndex + 1) % statuses.length];
+            try {
+                const res = await fetch('/api/agents/' + id + '/status', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (!res.ok) throw new Error('Error al cambiar estado');
+                await cargarAgentes();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+        
+        async function simularActividad() {
+            for (const agent of agents) {
+                const statuses = ['idle', 'working', 'thinking'];
+                const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                try {
+                    await fetch('/api/agents/' + agent.id + '/status', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                } catch (e) {}
+            }
+            await cargarAgentes();
+        }
+        
+        // Cargar agentes al inicio y cada 5 segundos
         cargarAgentes();
         setInterval(cargarAgentes, 5000);
     </script>
