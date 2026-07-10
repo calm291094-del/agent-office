@@ -16,27 +16,100 @@ interface Agent {
 }
 
 // ============================================================
-// SPRITES DE CDN GRATUITOS (Pixel Art)
+// CLASE PARA GENERAR TEXTURAS PIXEL ART
 // ============================================================
-const SPRITE_URLS = {
-    // Agentes (personajes pixel art de código abierto)
-    agent1: 'https://via.placeholder.com/48/8b5cf6/FFFFFF?text=🤖',
-    agent2: 'https://via.placeholder.com/48/3b82f6/FFFFFF?text=🤖',
-    agent3: 'https://via.placeholder.com/48/ec4899/FFFFFF?text=🤖',
-    
-    // Escritorio
-    desk: 'https://via.placeholder.com/48/4a5563/FFFFFF?text=💻',
-    
-    // Piso
-    floor: 'https://via.placeholder.com/48/2d3748/FFFFFF?text=⬜'
-};
+class PixelArtGenerator {
+    static generateAgentTexture(scene: Phaser.Scene, key: string, color: number, size: number = 48) {
+        const graphics = scene.make.graphics({ add: false });
+        
+        // Cuerpo principal (pixel art estilo 8-bit)
+        const pixelSize = size / 8;
+        
+        // Cabeza (cuadrado pixelado)
+        graphics.fillStyle(color, 1);
+        graphics.fillRect(pixelSize * 2, pixelSize * 1, pixelSize * 4, pixelSize * 3);
+        
+        // Ojos (blancos)
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillRect(pixelSize * 2.5, pixelSize * 1.5, pixelSize * 1, pixelSize * 1);
+        graphics.fillRect(pixelSize * 4.5, pixelSize * 1.5, pixelSize * 1, pixelSize * 1);
+        
+        // Pupilas (negras)
+        graphics.fillStyle(0x000000, 1);
+        graphics.fillRect(pixelSize * 3, pixelSize * 2, pixelSize * 0.5, pixelSize * 0.5);
+        graphics.fillRect(pixelSize * 5, pixelSize * 2, pixelSize * 0.5, pixelSize * 0.5);
+        
+        // Cuerpo
+        graphics.fillStyle(color, 1);
+        graphics.fillRect(pixelSize * 2, pixelSize * 4, pixelSize * 4, pixelSize * 2);
+        
+        // Brazos
+        graphics.fillRect(pixelSize * 1, pixelSize * 4, pixelSize * 1, pixelSize * 2);
+        graphics.fillRect(pixelSize * 6, pixelSize * 4, pixelSize * 1, pixelSize * 2);
+        
+        // Piernas
+        graphics.fillRect(pixelSize * 2.5, pixelSize * 6, pixelSize * 1, pixelSize * 2);
+        graphics.fillRect(pixelSize * 4.5, pixelSize * 6, pixelSize * 1, pixelSize * 2);
+        
+        // Generar textura
+        const texture = graphics.generateTexture(key, size, size);
+        graphics.destroy();
+        return texture;
+    }
+
+    static generateDeskTexture(scene: Phaser.Scene, key: string, size: number = 48) {
+        const graphics = scene.make.graphics({ add: false });
+        const pixelSize = size / 8;
+        
+        // Escritorio pixel art
+        graphics.fillStyle(0x8b7355, 1);
+        graphics.fillRect(pixelSize * 0.5, pixelSize * 3, pixelSize * 7, pixelSize * 2);
+        
+        // Patas del escritorio
+        graphics.fillStyle(0x6b5b4a, 1);
+        graphics.fillRect(pixelSize * 0.5, pixelSize * 5, pixelSize * 0.5, pixelSize * 3);
+        graphics.fillRect(pixelSize * 7, pixelSize * 5, pixelSize * 0.5, pixelSize * 3);
+        
+        // Monitor
+        graphics.fillStyle(0x2d3748, 1);
+        graphics.fillRect(pixelSize * 2, pixelSize * 0.5, pixelSize * 4, pixelSize * 2.5);
+        graphics.fillStyle(0x4a5563, 1);
+        graphics.fillRect(pixelSize * 2.5, pixelSize * 1, pixelSize * 3, pixelSize * 1.5);
+        
+        // Teclado
+        graphics.fillStyle(0x4a5563, 1);
+        graphics.fillRect(pixelSize * 2, pixelSize * 3.5, pixelSize * 4, pixelSize * 0.5);
+        
+        const texture = graphics.generateTexture(key, size, size);
+        graphics.destroy();
+        return texture;
+    }
+
+    static generateFloorTexture(scene: Phaser.Scene, key: string, size: number = 48) {
+        const graphics = scene.make.graphics({ add: false });
+        const pixelSize = size / 8;
+        
+        // Patrón de baldosas pixel art
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                const color = (i + j) % 2 === 0 ? 0x4a5563 : 0x2d3748;
+                graphics.fillStyle(color, 1);
+                graphics.fillRect(i * pixelSize, j * pixelSize, pixelSize, pixelSize);
+            }
+        }
+        
+        const texture = graphics.generateTexture(key, size, size);
+        graphics.destroy();
+        return texture;
+    }
+}
 
 // ============================================================
-// ESCENA DE PHASER CON SPRITES DE CDN
+// ESCENA DE PHASER CON SPRITES GENERADOS
 // ============================================================
 class OfficeScene extends Phaser.Scene {
     private agents: Agent[] = [];
-    private agentSprites: Map<number, Phaser.GameObjects.Sprite | Phaser.GameObjects.Graphics> = new Map();
+    private agentSprites: Map<number, Phaser.GameObjects.Sprite> = new Map();
     private agentNames: Map<number, Phaser.GameObjects.Text> = new Map();
     private statusTexts: Map<number, Phaser.GameObjects.Text> = new Map();
     private speechBubble: Phaser.GameObjects.Text | null = null;
@@ -52,81 +125,42 @@ class OfficeScene extends Phaser.Scene {
     }
 
     // ============================================================
-    // PRECARGA DE SPRITES DESDE CDN
-    // ============================================================
-    preload() {
-        // Cargar sprites desde CDN
-        this.load.image('agent1', SPRITE_URLS.agent1);
-        this.load.image('agent2', SPRITE_URLS.agent2);
-        this.load.image('agent3', SPRITE_URLS.agent3);
-        this.load.image('desk', SPRITE_URLS.desk);
-        this.load.image('floor', SPRITE_URLS.floor);
-        
-        // Mostrar progreso de carga
-        this.load.on('progress', (value: number) => {
-            console.log(`Cargando sprites: ${Math.round(value * 100)}%`);
-        });
-        
-        this.load.on('complete', () => {
-            console.log('✅ Todos los sprites cargados correctamente');
-            this.showSpeechBubble('✅ Oficina lista', 1500);
-        });
-        
-        this.load.on('loaderror', (file: any) => {
-            console.warn(`⚠️ Error cargando sprite: ${file.key}`, file.url);
-            this.showSpeechBubble(`⚠️ Error cargando: ${file.key}`, 2000);
-        });
-    }
-
-    // ============================================================
-    // CREACIÓN DE LA ESCENA
+    // CREACIÓN DE TEXTURAS Y ESCENA
     // ============================================================
     create() {
-        // 1. Fondo de la oficina con degradado
-        const bg = this.add.graphics();
-        bg.fillStyle(0x1a202c, 1);
-        bg.fillRect(0, 0, 800, 600);
-        
-        // 2. Dibujar escritorios con sprites
+        // 1. Generar texturas pixel art
+        PixelArtGenerator.generateAgentTexture(this, 'agent1', 0x8b5cf6);
+        PixelArtGenerator.generateAgentTexture(this, 'agent2', 0x3b82f6);
+        PixelArtGenerator.generateAgentTexture(this, 'agent3', 0xec4899);
+        PixelArtGenerator.generateDeskTexture(this, 'desk');
+        PixelArtGenerator.generateFloorTexture(this, 'floor');
+
+        // 2. Fondo de la oficina con patrón de piso
+        const floorTile = this.add.image(0, 0, 'floor').setOrigin(0, 0);
+        // Crear un patrón de piso más grande
+        for (let i = 0; i < 17; i++) {
+            for (let j = 0; j < 13; j++) {
+                this.add.image(i * 48, j * 48, 'floor').setOrigin(0, 0);
+            }
+        }
+
+        // 3. Dibujar escritorios con sprites generados
         const desks = [
             { x: 120, y: 120 }, { x: 320, y: 120 }, { x: 520, y: 120 },
             { x: 120, y: 320 }, { x: 320, y: 320 }, { x: 520, y: 320 }
         ];
-        
         desks.forEach(pos => {
-            // Usar sprite de escritorio si está cargado, si no, usar gráfico simple
-            if (this.textures.exists('desk')) {
-                const desk = this.add.image(pos.x, pos.y, 'desk');
-                desk.setScale(1.5);
-                desk.setAlpha(0.9);
-            } else {
-                // Fallback: dibujar un rectángulo con sombra
-                const desk = this.add.graphics();
-                desk.fillStyle(0x4a5563, 1);
-                desk.fillRect(pos.x - 25, pos.y - 20, 50, 40);
-                desk.lineStyle(2, 0x2d3748);
-                desk.strokeRect(pos.x - 25, pos.y - 20, 50, 40);
-            }
-            
-            // Ícono de computadora
-            const computer = this.add.text(pos.x - 10, pos.y - 10, '💻', { 
-                fontSize: '24px',
-                shadow: {
-                    offsetX: 2,
-                    offsetY: 2,
-                    color: '#000',
-                    blur: 4,
-                    fill: true
-                }
-            });
+            const desk = this.add.image(pos.x, pos.y, 'desk');
+            desk.setScale(1.5);
+            desk.setDepth(1);
         });
 
-        // 3. Inicializar contenedores
+        // 4. Inicializar contenedores
         this.agentSprites = new Map();
         this.agentNames = new Map();
         this.statusTexts = new Map();
 
-        // 4. Burbuja de diálogo mejorada
+        // 5. Burbuja de diálogo
         this.speechBubble = this.add.text(400, 30, '', {
             fontSize: '18px',
             color: '#ffffff',
@@ -147,8 +181,9 @@ class OfficeScene extends Phaser.Scene {
         });
         this.speechBubble.setVisible(false);
         this.speechBubble.setOrigin(0.5, 0);
+        this.speechBubble.setDepth(10);
 
-        // 5. Iniciar el juego (activar audio con interacción)
+        // 6. Iniciar el juego (activar audio con interacción)
         this.input.on('pointerdown', () => {
             if (!this.gameStarted) {
                 this.gameStarted = true;
@@ -160,13 +195,13 @@ class OfficeScene extends Phaser.Scene {
             }
         });
 
-        // 6. Cargar agentes desde la API
+        // 7. Cargar agentes desde la API
         this.loadAgentsFromAPI();
 
-        // 7. Conectar WebSocket
+        // 8. Conectar WebSocket
         this.connectWebSocket();
 
-        // 8. Mostrar mensaje de bienvenida
+        // 9. Mostrar mensaje de bienvenida
         this.showSpeechBubble('🎮 Haz clic en la pantalla para interactuar', 3000);
     }
 
@@ -227,28 +262,11 @@ class OfficeScene extends Phaser.Scene {
             // Seleccionar sprite según el ID (alternar entre 1, 2, 3)
             const spriteKey = `agent${(agent.id % 3) + 1}`;
             
-            let sprite: Phaser.GameObjects.Sprite | Phaser.GameObjects.Graphics;
-            
-            // Usar sprite si está cargado, si no, usar un círculo de color
-            if (this.textures.exists(spriteKey)) {
-                sprite = this.add.sprite(x, y, spriteKey);
-                (sprite as Phaser.GameObjects.Sprite).setScale(2);
-                (sprite as Phaser.GameObjects.Sprite).setInteractive();
-                // Agregar brillo al sprite
-                (sprite as Phaser.GameObjects.Sprite).setTint(0xffffff);
-            } else {
-                // Fallback: círculo de color con borde
-                const graphics = this.add.graphics();
-                const color = parseInt(agent.color.replace('#', ''), 16);
-                graphics.fillStyle(color, 1);
-                graphics.fillCircle(0, 0, 25);
-                graphics.lineStyle(3, 0x1a202c);
-                graphics.strokeCircle(0, 0, 25);
-                graphics.x = x;
-                graphics.y = y;
-                graphics.setInteractive();
-                sprite = graphics;
-            }
+            // Crear sprite con la textura generada
+            const sprite = this.add.sprite(x, y, spriteKey);
+            sprite.setScale(2);
+            sprite.setInteractive();
+            sprite.setDepth(2);
 
             this.agentSprites.set(agent.id, sprite);
 
@@ -263,6 +281,7 @@ class OfficeScene extends Phaser.Scene {
                 borderRadius: 6
             });
             nameText.setOrigin(0.5, 0);
+            nameText.setDepth(3);
             this.agentNames.set(agent.id, nameText);
 
             // Estado del agente con color y emoji
@@ -286,6 +305,7 @@ class OfficeScene extends Phaser.Scene {
                 borderRadius: 10
             });
             statusText.setOrigin(0.5, 0);
+            statusText.setDepth(3);
             this.statusTexts.set(agent.id, statusText);
 
             // Evento de clic
@@ -460,7 +480,6 @@ class OfficeScene extends Phaser.Scene {
             this.showSpeechBubble('🔴 Desconectado, reconectando...', 3000);
             this.events.emit('ws-status', false);
             
-            // Reconexión automática con backoff
             if (this.reconnectAttempts < this.maxReconnectAttempts) {
                 this.reconnectAttempts++;
                 const delay = Math.min(5000 * this.reconnectAttempts, 30000);
@@ -579,7 +598,7 @@ function App() {
                 setGame(null);
             };
         }
-    }, []);
+    }, [game]);
 
     return (
         <div style={{ 
@@ -604,7 +623,6 @@ function App() {
                     display: 'block'
                 }} />
                 
-                {/* Indicador de estado de conexión */}
                 <div style={{
                     position: 'absolute',
                     top: '16px',
