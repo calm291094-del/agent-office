@@ -14,3 +14,14 @@
     "node": ">=18"
   }
 }
+{
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:ui\"",
+    "dev:server": "node standalone-server/index.js",
+    "dev:ui": "cd webview-ui && npm run dev",
+    "build": "npm run build:ui",
+    "build:ui": "cd webview-ui && npm run build",
+    "start": "node standalone-server/index.js",
+    "setup": "npm install && cd webview-ui && npm install"
+  }
+}
