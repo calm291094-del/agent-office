@@ -60,3 +60,43 @@ app.get('/api/tasks', (req, res) => {
 app.listen(PORT, () => {
     console.log(`✅ Agent Office Server en puerto ${PORT}`);
 });
+
+// Agrega esta función al servidor
+async function consultarIA(mensaje) {
+    try {
+        const response = await fetch('https://text.pollinations.ai/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages: [
+                    { 
+                        role: 'system', 
+                        content: 'Eres un asistente virtual de MediTech. Hablas en español, eres amable y profesional. Ayudas con tareas de administración, gestión de productos y atención al cliente.' 
+                    },
+                    { role: 'user', content: mensaje }
+                ],
+                model: 'openai'
+            })
+        });
+        const texto = await response.text();
+        return texto || "Lo siento, no pude procesar tu solicitud.";
+    } catch (error) {
+        console.error('Error en IA:', error);
+        return "Lo siento, hubo un error al procesar tu solicitud.";
+    }
+}
+
+// Nueva ruta para chat con IA
+app.post('/api/chat', async (req, res) => {
+    const { message, agentId } = req.body;
+    try {
+        const respuesta = await consultarIA(message);
+        const agent = agents.find(a => a.id === agentId);
+        res.json({ 
+            response: respuesta,
+            agent: agent ? agent.name : 'Asistente'
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al procesar el mensaje' });
+    }
+});
