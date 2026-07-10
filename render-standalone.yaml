@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: pixel-agents-standalone
+    runtime: node
+    repo: https://github.com/tu-usuario/agent-office
+    buildCommand: |
+      cd pixel-agents-repo
+      npm install
+      cd webview-ui
+      npm install
+      npm run build
+    startCommand: |
+      cd pixel-agents-repo
+      npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: VITE_API_URL
+        value: https://pixel-agents-standalone.onrender.com/api
+    disk:
+      name: pixel-agents-data
+      mountPath: /app/pixel-agents-repo/data
+      sizeGB: 1
