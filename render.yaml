@@ -1,30 +1,76 @@
+# render.yaml - Configuración para AgentOffice en Render
 services:
-  # Servidor backend
+  # 1. Servidor Principal (Colyseus + SQLite)
   - type: web
-    name: agent-office
-    env: node
-    buildCommand: npm install
-    startCommand: node packages/server/index.js
+    name: agent-office-server
+    runtime: node
     plan: free
+    buildCommand: |
+      cd packages/server
+      npm install
+      npm run build
+    startCommand: |
+      cd packages/server
+      npm start
     envVars:
       - key: NODE_VERSION
-        value: 18
+        value: 22
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
+      - key: DATABASE_URL
+        value: sqlite:/data/office.db
+      - key: REDIS_URL
+        value: redis://agent-office-redis:6379
+      - key: OLLAMA_URL
+        value: http://agent-office-ollama:11434
+      - key: JWT_SECRET
+        generateValue: true
+    disk:
+      name: agent-office-data
+      mountPath: /data
+      sizeGB: 1
 
-  # UI Frontend
+  # 2. UI (Frontend con Phaser + React)
   - type: web
     name: agent-office-ui
-    env: node
-    buildCommand: npm install
-    startCommand: node packages/ui/server.js
+    runtime: node
     plan: free
+    buildCommand: |
+      cd packages/ui
+      npm install
+      npm run build
+    startCommand: |
+      cd packages/ui
+      npm start
     envVars:
       - key: NODE_VERSION
-        value: 18
+        value: 22
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3001
+        value: 10000
+      - key: API_URL
+        value: https://agent-office-server.onrender.com
+      - key: VITE_API_URL
+        value: https://agent-office-server.onrender.com/api
+
+  # 3. Redis (Cache y estado compartido)
+  - type: docker
+    name: agent-office-redis
+    image: redis:alpine
+    plan: free
+
+  # 4. Ollama (Modelos de IA Locales)
+  - type: docker
+    name: agent-office-ollama
+    image: ollama/ollama
+    plan: free
+    envVars:
+      - key: OLLAMA_HOST
+        value: 0.0.0.0
+    disk:
+      name: ollama-data
+      mountPath: /root/.ollama
+      sizeGB: 5
