@@ -1,76 +1,76 @@
 # render.yaml - Configuración para AgentOffice en Render
+# Ubicación: Raíz del repositorio (/opt/render/project/src/render.yaml)
+
 services:
-  # 1. Servidor Principal (Colyseus + SQLite)
+  # ============================================================
+  # SERVICIO 1: BACKEND (API + Agentes)
+  # ============================================================
   - type: web
-    name: agent-office-server
+    name: agent-office
     runtime: node
     plan: free
     buildCommand: |
-      cd packages/server
+      echo "📦 Instalando dependencias del backend..."
       npm install
-      npm run build
+      echo "✅ Build completado"
     startCommand: |
-      cd packages/server
-      npm start
+      echo "🚀 Iniciando servidor backend..."
+      node packages/server/index.js
     envVars:
       - key: NODE_VERSION
-        value: 22
+        value: 22.23.1
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
-      - key: DATABASE_URL
-        value: sqlite:/data/office.db
-      - key: REDIS_URL
-        value: redis://agent-office-redis:6379
-      - key: OLLAMA_URL
-        value: http://agent-office-ollama:11434
-      - key: JWT_SECRET
-        generateValue: true
-    disk:
-      name: agent-office-data
-      mountPath: /data
-      sizeGB: 1
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://agent-office-ui.onrender.com
+    healthCheckPath: /health
 
-  # 2. UI (Frontend con Phaser + React)
+  # ============================================================
+  # SERVICIO 2: FRONTEND (UI + API Local)
+  # ============================================================
   - type: web
     name: agent-office-ui
     runtime: node
     plan: free
     buildCommand: |
-      cd packages/ui
+      echo "📦 Instalando dependencias del frontend..."
       npm install
-      npm run build
+      echo "✅ Build completado"
     startCommand: |
-      cd packages/ui
-      npm start
+      echo "🚀 Iniciando servidor UI..."
+      node packages/ui/server.js
     envVars:
       - key: NODE_VERSION
-        value: 22
+        value: 22.23.1
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: API_URL
-        value: https://agent-office-server.onrender.com
-      - key: VITE_API_URL
-        value: https://agent-office-server.onrender.com/api
+        value: https://agent-office.onrender.com
+    healthCheckPath: /
 
-  # 3. Redis (Cache y estado compartido)
-  - type: docker
-    name: agent-office-redis
-    image: redis:alpine
-    plan: free
+  # ============================================================
+  # OPCIONAL: REDIS (para caché y estado compartido)
+  # ============================================================
+  # - type: docker
+  #   name: agent-office-redis
+  #   image: redis:alpine
+  #   plan: free
 
-  # 4. Ollama (Modelos de IA Locales)
-  - type: docker
-    name: agent-office-ollama
-    image: ollama/ollama
-    plan: free
-    envVars:
-      - key: OLLAMA_HOST
-        value: 0.0.0.0
-    disk:
-      name: ollama-data
-      mountPath: /root/.ollama
-      sizeGB: 5
+  # ============================================================
+  # OPCIONAL: OLLAMA (modelos de IA locales)
+  # ============================================================
+  # - type: docker
+  #   name: agent-office-ollama
+  #   image: ollama/ollama
+  #   plan: free
+  #   envVars:
+  #     - key: OLLAMA_HOST
+  #       value: 0.0.0.0
+  #   disk:
+  #     name: ollama-data
+  #     mountPath: /root/.ollama
+  #     sizeGB: 5
