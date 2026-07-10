@@ -178,16 +178,19 @@ app.get('/api/stats', (req, res) => {
     });
 });
 
-// ========== HEALTH CHECK ==========
-
+// ============================================================
+// 👇 AGREGAR ESTA SECCIÓN
+// ============================================================
 app.get('/health', (req, res) => {
     res.json({ 
         status: 'ok', 
         timestamp: new Date().toISOString(),
         service: 'agent-office-backend',
-        version: '1.0.0'
+        version: '1.0.0',
+        uptime: process.uptime()
     });
 });
+// ============================================================
 
 // ========== INICIAR SERVIDOR ==========
 
