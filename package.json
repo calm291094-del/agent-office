@@ -6,9 +6,9 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
-    "start:server": "npm run start --workspace=@agent-office/server",
-    "start:ui": "npm run start --workspace=@agent-office/ui"
+    "build": "echo 'No build needed'",
+    "start:server": "node packages/server/index.js",
+    "start:ui": "node packages/ui/server.js"
   },
   "engines": {
     "node": ">=18"
