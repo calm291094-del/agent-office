@@ -1,16 +1,12 @@
 {
-    "name": "@agent-office/core",
-    "version": "1.0.0",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "scripts": {
-        "build": "tsc",
-        "test": "jest"
-    },
-    "dependencies": {
-        "easystarjs": "^0.4.4"
-    },
-    "devDependencies": {
-        "@types/easystarjs": "^0.1.29"
-    }
+  "name": "@agent-office/core",
+  "version": "1.0.0",
+  "description": "Core logic for Agent Office",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests specified\""
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
+  }
 }
