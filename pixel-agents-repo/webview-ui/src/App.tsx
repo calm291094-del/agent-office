@@ -22,10 +22,10 @@ const SPRITE_URLS = {
     // Agentes (personajes pixel art de código abierto)
     agent1: 'https://via.placeholder.com/48/8b5cf6/FFFFFF?text=🤖',
     agent2: 'https://via.placeholder.com/48/3b82f6/FFFFFF?text=🤖',
-    agent3: 'https://via.placeholder.com/48/3b82f6/FFFFFF?text=🤖',
+    agent3: 'https://via.placeholder.com/48/ec4899/FFFFFF?text=🤖',
     
     // Escritorio
-    desk: 'https://via.placeholder.com/48/4a5563/FFFFFF?text=💻',,
+    desk: 'https://via.placeholder.com/48/4a5563/FFFFFF?text=💻',
     
     // Piso
     floor: 'https://via.placeholder.com/48/2d3748/FFFFFF?text=⬜'
@@ -36,7 +36,7 @@ const SPRITE_URLS = {
 // ============================================================
 class OfficeScene extends Phaser.Scene {
     private agents: Agent[] = [];
-    private agentSprites: Map<number, Phaser.GameObjects.Sprite> = new Map();
+    private agentSprites: Map<number, Phaser.GameObjects.Sprite | Phaser.GameObjects.Graphics> = new Map();
     private agentNames: Map<number, Phaser.GameObjects.Text> = new Map();
     private statusTexts: Map<number, Phaser.GameObjects.Text> = new Map();
     private speechBubble: Phaser.GameObjects.Text | null = null;
@@ -44,6 +44,8 @@ class OfficeScene extends Phaser.Scene {
     private ws: WebSocket | null = null;
     private isConnected: boolean = false;
     private gameStarted: boolean = false;
+    private reconnectAttempts: number = 0;
+    private maxReconnectAttempts: number = 5;
 
     constructor() {
         super('OfficeScene');
@@ -67,10 +69,12 @@ class OfficeScene extends Phaser.Scene {
         
         this.load.on('complete', () => {
             console.log('✅ Todos los sprites cargados correctamente');
+            this.showSpeechBubble('✅ Oficina lista', 1500);
         });
         
         this.load.on('loaderror', (file: any) => {
             console.warn(`⚠️ Error cargando sprite: ${file.key}`, file.url);
+            this.showSpeechBubble(`⚠️ Error cargando: ${file.key}`, 2000);
         });
     }
 
@@ -78,28 +82,43 @@ class OfficeScene extends Phaser.Scene {
     // CREACIÓN DE LA ESCENA
     // ============================================================
     create() {
-        // 1. Fondo de la oficina (color sólido)
-        this.add.graphics().fillStyle(0x2d3748, 1).fillRect(0, 0, 800, 600);
+        // 1. Fondo de la oficina con degradado
+        const bg = this.add.graphics();
+        bg.fillStyle(0x1a202c, 1);
+        bg.fillRect(0, 0, 800, 600);
         
         // 2. Dibujar escritorios con sprites
         const desks = [
             { x: 120, y: 120 }, { x: 320, y: 120 }, { x: 520, y: 120 },
             { x: 120, y: 320 }, { x: 320, y: 320 }, { x: 520, y: 320 }
         ];
+        
         desks.forEach(pos => {
             // Usar sprite de escritorio si está cargado, si no, usar gráfico simple
             if (this.textures.exists('desk')) {
                 const desk = this.add.image(pos.x, pos.y, 'desk');
                 desk.setScale(1.5);
+                desk.setAlpha(0.9);
             } else {
-                // Fallback: dibujar un rectángulo
+                // Fallback: dibujar un rectángulo con sombra
                 const desk = this.add.graphics();
                 desk.fillStyle(0x4a5563, 1);
                 desk.fillRect(pos.x - 25, pos.y - 20, 50, 40);
+                desk.lineStyle(2, 0x2d3748);
+                desk.strokeRect(pos.x - 25, pos.y - 20, 50, 40);
             }
             
             // Ícono de computadora
-            this.add.text(pos.x - 10, pos.y - 10, '💻', { fontSize: '24px' });
+            const computer = this.add.text(pos.x - 10, pos.y - 10, '💻', { 
+                fontSize: '24px',
+                shadow: {
+                    offsetX: 2,
+                    offsetY: 2,
+                    color: '#000',
+                    blur: 4,
+                    fill: true
+                }
+            });
         });
 
         // 3. Inicializar contenedores
@@ -107,17 +126,24 @@ class OfficeScene extends Phaser.Scene {
         this.agentNames = new Map();
         this.statusTexts = new Map();
 
-        // 4. Burbuja de diálogo
+        // 4. Burbuja de diálogo mejorada
         this.speechBubble = this.add.text(400, 30, '', {
             fontSize: '18px',
             color: '#ffffff',
             backgroundColor: '#1a202c',
             padding: { x: 16, y: 10 },
-            borderColor: '#4a5563',
+            borderColor: '#0d9488',
             borderWidth: 2,
             borderRadius: 12,
             fontFamily: 'Segoe UI, sans-serif',
-            align: 'center'
+            align: 'center',
+            shadow: {
+                offsetX: 0,
+                offsetY: 4,
+                color: '#000',
+                blur: 8,
+                fill: true
+            }
         });
         this.speechBubble.setVisible(false);
         this.speechBubble.setOrigin(0.5, 0);
@@ -126,11 +152,11 @@ class OfficeScene extends Phaser.Scene {
         this.input.on('pointerdown', () => {
             if (!this.gameStarted) {
                 this.gameStarted = true;
-                // Reanudar audio si es necesario
                 if (this.sound) {
                     this.sound.resumeAll();
                 }
                 console.log('🎮 Juego activado por interacción del usuario');
+                this.showSpeechBubble('🎮 ¡Bienvenido a la oficina!', 2000);
             }
         });
 
@@ -141,7 +167,7 @@ class OfficeScene extends Phaser.Scene {
         this.connectWebSocket();
 
         // 8. Mostrar mensaje de bienvenida
-        this.showSpeechBubble('🎮 Haz clic en la pantalla para activar el audio', 3000);
+        this.showSpeechBubble('🎮 Haz clic en la pantalla para interactuar', 3000);
     }
 
     // ============================================================
@@ -150,9 +176,14 @@ class OfficeScene extends Phaser.Scene {
     async loadAgentsFromAPI() {
         try {
             const response = await fetch('/api/agents');
-            if (!response.ok) throw new Error('Error al cargar agentes');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const agents = await response.json();
-            this.updateAgents(agents);
+            if (Array.isArray(agents) && agents.length > 0) {
+                this.updateAgents(agents);
+                this.showSpeechBubble(`✅ ${agents.length} agentes cargados`, 2000);
+            } else {
+                this.loadFallbackAgents();
+            }
         } catch (error) {
             console.error('Error cargando agentes:', error);
             this.loadFallbackAgents();
@@ -168,6 +199,7 @@ class OfficeScene extends Phaser.Scene {
             { id: 5, name: 'Sofía', role: 'Support', status: 'idle', icon: '💁‍♀️', color: '#10b981', x: 350, y: 350 }
         ];
         this.updateAgents(fallbackAgents);
+        this.showSpeechBubble('⚠️ Usando agentes de respaldo', 2000);
     }
 
     // ============================================================
@@ -202,19 +234,23 @@ class OfficeScene extends Phaser.Scene {
                 sprite = this.add.sprite(x, y, spriteKey);
                 (sprite as Phaser.GameObjects.Sprite).setScale(2);
                 (sprite as Phaser.GameObjects.Sprite).setInteractive();
+                // Agregar brillo al sprite
+                (sprite as Phaser.GameObjects.Sprite).setTint(0xffffff);
             } else {
-                // Fallback: círculo de color
+                // Fallback: círculo de color con borde
                 const graphics = this.add.graphics();
                 const color = parseInt(agent.color.replace('#', ''), 16);
                 graphics.fillStyle(color, 1);
                 graphics.fillCircle(0, 0, 25);
+                graphics.lineStyle(3, 0x1a202c);
+                graphics.strokeCircle(0, 0, 25);
                 graphics.x = x;
                 graphics.y = y;
                 graphics.setInteractive();
                 sprite = graphics;
             }
 
-            this.agentSprites.set(agent.id, sprite as any);
+            this.agentSprites.set(agent.id, sprite);
 
             // Nombre del agente
             const nameText = this.add.text(x - 20, y - 45, agent.name, {
@@ -222,25 +258,30 @@ class OfficeScene extends Phaser.Scene {
                 color: '#ffffff',
                 fontFamily: 'Segoe UI, sans-serif',
                 fontStyle: 'bold',
-                backgroundColor: '#1a202c',
+                backgroundColor: 'rgba(26, 32, 44, 0.8)',
                 padding: { x: 6, y: 2 },
                 borderRadius: 6
             });
             nameText.setOrigin(0.5, 0);
             this.agentNames.set(agent.id, nameText);
 
-            // Estado del agente
+            // Estado del agente con color y emoji
+            const statusEmojis: Record<string, string> = {
+                'working': '🔧',
+                'thinking': '🧠',
+                'idle': '💤'
+            };
             const statusColors: Record<string, string> = {
                 'working': '#10b981',
                 'thinking': '#f59e0b',
                 'idle': '#94a3b8'
             };
-            const statusText = this.add.text(x, y + 35, agent.status, {
+            const statusText = this.add.text(x, y + 35, `${statusEmojis[agent.status] || ''} ${agent.status}`, {
                 fontSize: '11px',
                 color: statusColors[agent.status] || '#94a3b8',
                 fontFamily: 'Segoe UI, sans-serif',
                 fontStyle: 'bold',
-                backgroundColor: '#1a202c',
+                backgroundColor: 'rgba(26, 32, 44, 0.8)',
                 padding: { x: 8, y: 2 },
                 borderRadius: 10
             });
@@ -249,7 +290,6 @@ class OfficeScene extends Phaser.Scene {
 
             // Evento de clic
             sprite.on('pointerdown', () => {
-                // Activar audio si no está activo
                 if (!this.gameStarted) {
                     this.gameStarted = true;
                     if (this.sound) {
@@ -258,6 +298,15 @@ class OfficeScene extends Phaser.Scene {
                 }
                 this.sendAgentAction(agent.id, 'working');
                 this.showSpeechBubble(`💬 ${agent.name}: ¡Hola! Soy ${agent.role}`, 3000);
+            });
+
+            // Evento hover
+            sprite.on('pointerover', () => {
+                sprite.setScale(2.2);
+                this.showSpeechBubble(`👤 ${agent.name} - ${agent.role}`, 1500);
+            });
+            sprite.on('pointerout', () => {
+                sprite.setScale(2);
             });
 
             // Animación de respiración
@@ -316,14 +365,20 @@ class OfficeScene extends Phaser.Scene {
     // ACTUALIZACIÓN DE ESTADO (WebSocket)
     // ============================================================
     updateAgentStatus(agentId: number, status: string) {
+        const statusEmojis: Record<string, string> = {
+            'working': '🔧',
+            'thinking': '🧠',
+            'idle': '💤'
+        };
+        const statusColors: Record<string, string> = {
+            'working': '#10b981',
+            'thinking': '#f59e0b',
+            'idle': '#94a3b8'
+        };
+        
         const statusText = this.statusTexts.get(agentId);
         if (statusText) {
-            const statusColors: Record<string, string> = {
-                'working': '#10b981',
-                'thinking': '#f59e0b',
-                'idle': '#94a3b8'
-            };
-            statusText.setText(status);
+            statusText.setText(`${statusEmojis[status] || ''} ${status}`);
             statusText.setColor(statusColors[status] || '#94a3b8');
         }
 
@@ -367,7 +422,7 @@ class OfficeScene extends Phaser.Scene {
     }
 
     // ============================================================
-    // WEBSOCKET
+    // WEBSOCKET CON RECONEXIÓN AUTOMÁTICA
     // ============================================================
     connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -378,6 +433,7 @@ class OfficeScene extends Phaser.Scene {
         this.ws.onopen = () => {
             console.log('✅ WebSocket conectado');
             this.isConnected = true;
+            this.reconnectAttempts = 0;
             this.showSpeechBubble('🔵 Conectado al servidor', 2000);
             this.events.emit('ws-status', true);
         };
@@ -403,11 +459,19 @@ class OfficeScene extends Phaser.Scene {
             this.isConnected = false;
             this.showSpeechBubble('🔴 Desconectado, reconectando...', 3000);
             this.events.emit('ws-status', false);
-            setTimeout(() => {
-                if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
-                    this.connectWebSocket();
-                }
-            }, 5000);
+            
+            // Reconexión automática con backoff
+            if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                this.reconnectAttempts++;
+                const delay = Math.min(5000 * this.reconnectAttempts, 30000);
+                setTimeout(() => {
+                    if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
+                        this.connectWebSocket();
+                    }
+                }, delay);
+            } else {
+                this.showSpeechBubble('❌ No se pudo reconectar. Recarga la página.', 5000);
+            }
         };
     }
 
@@ -469,15 +533,16 @@ class OfficeScene extends Phaser.Scene {
 }
 
 // ============================================================
-// COMPONENTE REACT
+// COMPONENTE REACT MEJORADO
 // ============================================================
 function App() {
     const gameContainerRef = useRef<HTMLDivElement>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [game, setGame] = useState<Phaser.Game | null>(null);
 
     useEffect(() => {
-        if (gameContainerRef.current) {
-            const game = new Phaser.Game({
+        if (gameContainerRef.current && !game) {
+            const newGame = new Phaser.Game({
                 type: Phaser.AUTO,
                 parent: gameContainerRef.current,
                 width: 800,
@@ -488,13 +553,21 @@ function App() {
                     mode: Phaser.Scale.FIT,
                     autoCenter: Phaser.Scale.CENTER_BOTH
                 },
-                // Configuración para evitar errores de audio
                 audio: {
-                    noAudio: true // Desactiva el audio completamente
+                    noAudio: true
+                },
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                        gravity: { y: 0 },
+                        debug: false
+                    }
                 }
             });
 
-            const scene = game.scene.getScene('OfficeScene') as OfficeScene;
+            setGame(newGame);
+
+            const scene = newGame.scene.getScene('OfficeScene') as OfficeScene;
             if (scene) {
                 scene.events.on('ws-status', (status: boolean) => {
                     setIsConnected(status);
@@ -502,7 +575,8 @@ function App() {
             }
 
             return () => {
-                game.destroy(true);
+                newGame.destroy(true);
+                setGame(null);
             };
         }
     }, []);
@@ -514,31 +588,58 @@ function App() {
             justifyContent: 'center', 
             alignItems: 'center',
             minHeight: '100vh',
-            background: '#0f172a'
+            background: '#0f172a',
+            padding: '20px'
         }}>
-            <div ref={gameContainerRef} style={{ 
-                width: '800px', 
-                height: '600px',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
-            }} />
-            
             <div style={{
-                position: 'absolute',
-                bottom: '20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                color: isConnected ? '#10b981' : '#ef4444',
-                fontSize: '14px',
-                fontFamily: 'Segoe UI, sans-serif',
-                background: 'rgba(0,0,0,0.7)',
-                padding: '6px 16px',
-                borderRadius: '20px',
-                border: `1px solid ${isConnected ? '#10b981' : '#ef4444'}`
+                position: 'relative',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
+                border: '1px solid #334155'
             }}>
-                {isConnected ? '🟢 Conectado' : '🔴 Desconectado'}
+                <div ref={gameContainerRef} style={{ 
+                    width: '800px', 
+                    height: '600px',
+                    display: 'block'
+                }} />
+                
+                {/* Indicador de estado de conexión */}
+                <div style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    color: isConnected ? '#10b981' : '#ef4444',
+                    fontSize: '13px',
+                    fontFamily: 'Segoe UI, sans-serif',
+                    background: 'rgba(0,0,0,0.75)',
+                    padding: '4px 14px',
+                    borderRadius: '20px',
+                    border: `1px solid ${isConnected ? '#10b981' : '#ef4444'}`,
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                }}>
+                    <span style={{
+                        display: 'inline-block',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: isConnected ? '#10b981' : '#ef4444',
+                        animation: isConnected ? 'pulse 1.5s infinite' : 'none'
+                    }} />
+                    {isConnected ? '🟢 Conectado' : '🔴 Desconectado'}
+                </div>
             </div>
+            
+            <style>{`
+                @keyframes pulse {
+                    0% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.5; transform: scale(0.8); }
+                    100% { opacity: 1; transform: scale(1); }
+                }
+            `}</style>
         </div>
     );
 }
