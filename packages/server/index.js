@@ -100,3 +100,12 @@ app.post('/api/chat', async (req, res) => {
         res.status(500).json({ error: 'Error al procesar el mensaje' });
     }
 });
+
+// Agrega esta ruta
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'agent-office-backend'
+    });
+});
