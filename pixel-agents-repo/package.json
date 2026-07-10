@@ -1,22 +1,14 @@
 {
-  "name": "pixel-agents-standalone",
+  "name": "pixel-agents-repo",
   "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "server",
-    "webview-ui"
-  ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:ui\"",
-    "dev:server": "npm run dev --workspace=server",
-    "dev:ui": "npm run dev --workspace=webview-ui",
-    "build": "npm run build --workspaces",
-    "start": "npm run start --workspace=server"
     "start": "node server.js"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.0"
+  "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }
