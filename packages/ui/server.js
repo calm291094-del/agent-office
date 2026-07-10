@@ -88,7 +88,7 @@ app.get('/', (req, res) => {
     </div>
 
     <script>
-        const API_URL = 'https://agent-office.onrender.com';
+        const API_URL = 'https://agent-office-z916.onrender.com';
         let agents = [];
 
         async function cargarAgentes() {
