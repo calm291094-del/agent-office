@@ -1,20 +1,23 @@
-// packages/ui/server.js - VERSIÓN SIN TEMPLATE LITERALS
+// packages/ui/server.js - VERSIÓN CORREGIDA (sin template literals)
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ========== MIDDLEWARE ==========
+// Middleware para JSON
 app.use(express.json());
 
-// ========== BASE DE DATOS EN MEMORIA ==========
+// Base de datos en memoria
 let agents = [];
 let nextId = 1;
 
 // ========== RUTAS API ==========
+
+// Obtener todos los agentes
 app.get('/api/agents', (req, res) => {
     res.json(agents);
 });
 
+// Crear nuevo agente
 app.post('/api/agents', (req, res) => {
     const { name, role } = req.body;
     const agent = {
@@ -29,6 +32,7 @@ app.post('/api/agents', (req, res) => {
     res.status(201).json(agent);
 });
 
+// Eliminar agente
 app.delete('/api/agents/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const index = agents.findIndex(a => a.id === id);
@@ -39,6 +43,7 @@ app.delete('/api/agents/:id', (req, res) => {
     res.json({ message: 'Agente eliminado' });
 });
 
+// Cambiar estado del agente
 app.put('/api/agents/:id/status', (req, res) => {
     const id = parseInt(req.params.id);
     const { status } = req.body;
@@ -50,9 +55,10 @@ app.put('/api/agents/:id/status', (req, res) => {
     res.json(agent);
 });
 
-// ========== UI - USANDO CONCATENACIÓN DE STRINGS ==========
-app.get('/', (req, res) {
-    var html = '';
+// ========== UI ==========
+
+app.get('/', (req, res) => {
+    let html = '';
     
     html += '<!DOCTYPE html>';
     html += '<html>';
@@ -83,7 +89,7 @@ app.get('/', (req, res) {
     html += '.status-thinking { background: #f59e0b; color: #0f172a; }';
     html += '.btn-create { background: #0d9488; color: white; padding: 8px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }';
     html += '.btn-create:hover { background: #0f766e; }';
-    html += '.btn-delete { background: #ef4444; color: white; padding: 4px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.7rem; margin-top: 8px; }';
+    html += '.btn-delete { background: #ef4444; color: white; padding: 4px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.7rem; }';
     html += '.btn-delete:hover { background: #dc2626; }';
     html += '.stats { display: flex; gap: 20px; margin-top: 16px; color: #94a3b8; font-size: 0.85rem; flex-wrap: wrap; }';
     html += '.stats span { background: #1e293b; padding: 4px 16px; border-radius: 20px; }';
@@ -145,123 +151,17 @@ app.get('/', (req, res) {
     html += '</div>';
     
     html += '<script>';
-    html += 'var API_URL = "";';
-    html += 'var agents = [];';
-    
-    html += 'async function cargarAgentes() {';
-    html += '    try {';
-    html += '        var res = await fetch("/api/agents");';
-    html += '        agents = await res.json();';
-    html += '        renderAgentes();';
-    html += '        actualizarEstadisticas();';
-    html += '    } catch (e) {';
-    html += '        console.error("Error:", e);';
-    html += '    }';
-    html += '}';
-    
-    html += 'function renderAgentes() {';
-    html += '    var container = document.getElementById("agents-container");';
-    html += '    if (agents.length === 0) {';
-    html += '        container.innerHTML = "<p style=\"color:#475569;grid-column:1/-1;text-align:center;padding:20px;\">No hay agentes aún. ¡Crea uno!</p>";';
-    html += '        return;';
-    html += '    }';
-    html += '    var html = "";';
-    html += '    for (var i = 0; i < agents.length; i++) {';
-    html += '        var a = agents[i];';
-    html += '        var statusClass = "status-" + a.status;';
-    html += '        var statusText = a.status === "working" ? "🔧 Trabajando" : a.status === "thinking" ? "🧠 Pensando" : "💤 Inactivo";';
-    html += '        html += "<div class=\"agent-card\">";';
-    html += '        html += "<div class=\"icon\">" + a.icon + "</div>";';
-    html += '        html += "<div class=\"name\">" + a.name + "</div>";';
-    html += '        html += "<div class=\"role\">" + a.role + "</div>";';
-    html += '        html += "<span class=\"status " + statusClass + "\">" + statusText + "</span>";';
-    html += '        html += "<div><button class=\"btn-delete\" onclick=\"eliminarAgente(" + a.id + ")\">Eliminar</button></div>";';
-    html += '        html += "</div>";';
-    html += '    }';
-    html += '    container.innerHTML = html;';
-    html += '}';
-    
-    html += 'function actualizarEstadisticas() {';
-    html += '    var working = agents.filter(function(a) { return a.status === "working"; }).length;';
-    html += '    var thinking = agents.filter(function(a) { return a.status === "thinking"; }).length;';
-    html += '    document.getElementById("agent-count").textContent = agents.length + " Agentes";';
-    html += '    document.getElementById("working-count").textContent = working + " Trabajando";';
-    html += '    document.getElementById("thinking-count").textContent = thinking + " Pensando";';
-    html += '}';
-    
-    html += 'async function crearAgente() {';
-    html += '    var name = prompt("Nombre del agente:", "Agente " + (agents.length + 1));';
-    html += '    if (!name) return;';
-    html += '    var role = prompt("Rol del agente:", "Asistente");';
-    html += '    try {';
-    html += '        await fetch("/api/agents", {';
-    html += '            method: "POST",';
-    html += '            headers: { "Content-Type": "application/json" },';
-    html += '            body: JSON.stringify({ name: name, role: role || "Asistente" })';
-    html += '        });';
-    html += '        await cargarAgentes();';
-    html += '        agregarChat("Sistema", "✅ Agente \\"" + name + "\\" creado");';
-    html += '    } catch (e) {';
-    html += '        alert("Error al crear agente");';
-    html += '    }';
-    html += '}';
-    
-    html += 'async function eliminarAgente(id) {';
-    html += '    if (!confirm("¿Eliminar este agente?")) return;';
-    html += '    try {';
-    html += '        await fetch("/api/agents/" + id, { method: "DELETE" });';
-    html += '        await cargarAgentes();';
-    html += '        agregarChat("Sistema", "🗑️ Agente eliminado");';
-    html += '    } catch (e) {';
-    html += '        alert("Error al eliminar");';
-    html += '    }';
-    html += '}';
-    
-    html += 'async function simularActividad() {';
-    html += '    if (agents.length === 0) return;';
-    html += '    var statuses = ["idle", "working", "thinking"];';
-    html += '    for (var i = 0; i < agents.length; i++) {';
-    html += '        var newStatus = statuses[Math.floor(Math.random() * statuses.length)];';
-    html += '        try {';
-    html += '            await fetch("/api/agents/" + agents[i].id + "/status", {';
-    html += '                method: "PUT",';
-    html += '                headers: { "Content-Type": "application/json" },';
-    html += '                body: JSON.stringify({ status: newStatus })';
-    html += '            });';
-    html += '        } catch (e) {}';
-    html += '    }';
-    html += '    await cargarAgentes();';
-    html += '    agregarChat("Sistema", "🔄 Estados actualizados aleatoriamente");';
-    html += '}';
-    
-    html += 'function agregarChat(usuario, mensaje) {';
-    html += '    var area = document.getElementById("chat-area");';
-    html += '    var div = document.createElement("div");';
-    html += '    div.className = "chat-message";';
-    html += '    var cls = usuario === "Sistema" ? "user" : "agent";';
-    html += '    div.innerHTML = "<span class=\\"" + cls + "\\">" + usuario + ":</span> " + mensaje;';
-    html += '    area.appendChild(div);';
-    html += '    area.scrollTop = area.scrollHeight;';
-    html += '}';
-    
-    html += 'function enviarMensaje() {';
-    html += '    var input = document.getElementById("chat-input");';
-    html += '    var msg = input.value.trim();';
-    html += '    if (!msg) return;';
-    html += '    input.value = "";';
-    html += '    agregarChat("Tú", msg);';
-    html += '    setTimeout(function() {';
-    html += '        var respuestas = ["🤖 Recibido, administrador.", "📝 Anotado.", "✅ ¡Entendido!", "☕ Un momento...", "💡 ¡Excelente!"];';
-    html += '        var random = respuestas[Math.floor(Math.random() * respuestas.length)];';
-    html += '        var nombre = agents.length > 0 ? agents[Math.floor(Math.random() * agents.length)].name : "Agente";';
-    html += '        agregarChat(nombre, random);';
-    html += '    }, 1000);';
-    html += '}';
-    
-    html += 'cargarAgentes();';
-    html += 'setInterval(cargarAgentes, 5000);';
+    html += 'let agents = [];';
+    html += 'async function cargarAgentes() { try { const res = await fetch("/api/agents"); agents = await res.json(); renderAgentes(); actualizarEstadisticas(); } catch(e) { console.error(e); } }';
+    html += 'function renderAgentes() { const container = document.getElementById("agents-container"); if (agents.length === 0) { container.innerHTML = "<p style=\\"color:#475569;grid-column:1/-1;text-align:center;padding:20px;\\">No hay agentes aún. ¡Crea uno!</p>"; return; } let html = ""; for (const a of agents) { const statusClass = "status-" + a.status; const statusText = a.status === "working" ? "🔧 Trabajando" : a.status === "thinking" ? "🧠 Pensando" : "💤 Inactivo"; html += "<div class=\\"agent-card\\"><div class=\\"icon\\">" + a.icon + "</div><div class=\\"name\\">" + a.name + "</div><div class=\\"role\\">" + a.role + "</div><span class=\\"status " + statusClass + "\\">" + statusText + "</span><div><button class=\\"btn-delete\\" onclick=\\"eliminarAgente(" + a.id + ")\\">Eliminar</button></div></div>"; } container.innerHTML = html; }';
+    html += 'function actualizarEstadisticas() { const working = agents.filter(a => a.status === "working").length; const thinking = agents.filter(a => a.status === "thinking").length; document.getElementById("agent-count").textContent = agents.length + " Agentes"; document.getElementById("working-count").textContent = working + " Trabajando"; document.getElementById("thinking-count").textContent = thinking + " Pensando"; }';
+    html += 'async function crearAgente() { const name = prompt("Nombre del agente:", "Agente " + (agents.length + 1)); if (!name) return; const role = prompt("Rol del agente:", "Asistente"); try { await fetch("/api/agents", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, role: role || "Asistente" }) }); await cargarAgentes(); agregarChat("Sistema", "✅ Agente \\"" + name + "\\" creado"); } catch(e) { alert("Error"); } }';
+    html += 'async function eliminarAgente(id) { if (!confirm("¿Eliminar este agente?")) return; try { await fetch("/api/agents/" + id, { method: "DELETE" }); await cargarAgentes(); agregarChat("Sistema", "🗑️ Agente eliminado"); } catch(e) { alert("Error"); } }';
+    html += 'async function simularActividad() { if (agents.length === 0) return; const statuses = ["idle", "working", "thinking"]; for (const agent of agents) { const newStatus = statuses[Math.floor(Math.random() * statuses.length)]; try { await fetch("/api/agents/" + agent.id + "/status", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) }); } catch(e) {} } await cargarAgentes(); agregarChat("Sistema", "🔄 Estados actualizados aleatoriamente"); }';
+    html += 'function agregarChat(usuario, mensaje) { const area = document.getElementById("chat-area"); const div = document.createElement("div"); div.className = "chat-message"; const cls = usuario === "Sistema" ? "user" : "agent"; div.innerHTML = "<span class=\\"" + cls + "\\">" + usuario + ":</span> " + mensaje; area.appendChild(div); area.scrollTop = area.scrollHeight; }';
+    html += 'function enviarMensaje() { const input = document.getElementById("chat-input"); const msg = input.value.trim(); if (!msg) return; input.value = ""; agregarChat("Tú", msg); setTimeout(() => { const respuestas = ["🤖 Recibido.", "📝 Anotado.", "✅ ¡Entendido!", "☕ Un momento...", "💡 ¡Excelente!"]; const random = respuestas[Math.floor(Math.random() * respuestas.length)]; const nombre = agents.length > 0 ? agents[Math.floor(Math.random() * agents.length)].name : "Agente"; agregarChat(nombre, random); }, 1000); }';
+    html += 'cargarAgentes(); setInterval(cargarAgentes, 5000);';
     html += '</script>';
-    
     html += '</body>';
     html += '</html>';
     
