@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏢 Pixel Agents</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0f172a; color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: #1e293b; border-radius: 20px; padding: 40px; max-width: 600px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        h1 { font-size: 2rem; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+        .status { background: #0d9488; padding: 8px 16px; border-radius: 8px; display: inline-block; font-size: 0.85rem; }
+        .agent-list { margin-top: 20px; display: grid; gap: 12px; }
+        .agent-item { background: #334155; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .agent-name { font-weight: 600; }
+        .agent-status { font-size: 0.75rem; padding: 2px 12px; border-radius: 20px; background: #475569; }
+        .agent-status.working { background: #0d9488; }
+        .agent-status.thinking { background: #f59e0b; color: #0f172a; }
+        .footer { margin-top: 20px; color: #94a3b8; font-size: 0.75rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 Pixel Agents</h1>
+        <p>Estado: <span class="status">✅ Conectado</span></p>
+        <p style="color: #94a3b8; margin-top: 8px;">Servidor funcionando correctamente</p>
+        
+        <div class="agent-list" id="agent-list">
+            <div class="agent-item">
+                <span class="agent-name">🤖 Cargando agentes...</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <span>🔒 Servidor seguro</span> · 
+            <span>v1.0.0</span> · 
+            <span><a href="https://agent-office-ui.onrender.com" style="color: #0d9488; text-decoration: none;">← Volver a Agent Office</a></span>
+        </div>
+    </div>
+    
+    <script>
+        async function cargarAgentes() {
+            try {
+                const res = await fetch('/api/agents');
+                const data = await res.json();
+                const list = document.getElementById('agent-list');
+                if (data.agents && data.agents.length > 0) {
+                    list.innerHTML = data.agents.map(a => `
+                        <div class="agent-item">
+                            <span class="agent-name">🤖 ${a.name}</span>
+                            <span class="agent-status ${a.status}">${a.status}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<div class="agent-item"><span class="agent-name">No hay agentes disponibles</span></div>';
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                document.getElementById('agent-list').innerHTML = 
+                    '<div class="agent-item"><span class="agent-name">❌ Error al cargar agentes</span></div>';
+            }
+        }
+        
+        cargarAgentes();
+        setInterval(cargarAgentes, 5000);
+    </script>
+</body>
+</html>
