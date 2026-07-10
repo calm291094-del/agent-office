@@ -1,21 +1,13 @@
-# render.yaml - Configuración para AgentOffice en Render
-# Ubicación: Raíz del repositorio (/opt/render/project/src/render.yaml)
-
 services:
   # ============================================================
-  # SERVICIO 1: BACKEND (API + Agentes)
+  # SERVICIO 1: BACKEND (agent-office)
   # ============================================================
   - type: web
     name: agent-office
     runtime: node
     plan: free
-    buildCommand: |
-      echo "📦 Instalando dependencias del backend..."
-      npm install
-      echo "✅ Build completado"
-    startCommand: |
-      echo "🚀 Iniciando servidor backend..."
-      node packages/server/index.js
+    buildCommand: npm install
+    startCommand: node packages/server/index.js
     envVars:
       - key: NODE_VERSION
         value: 22.23.1
@@ -23,24 +15,16 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: CORS_ORIGIN
-        value: https://agent-office-ui.onrender.com
-    healthCheckPath: /health
 
   # ============================================================
-  # SERVICIO 2: FRONTEND (UI + API Local)
+  # SERVICIO 2: UI (agent-office-ui)
   # ============================================================
   - type: web
     name: agent-office-ui
     runtime: node
     plan: free
-    buildCommand: |
-      echo "📦 Instalando dependencias del frontend..."
-      npm install
-      echo "✅ Build completado"
-    startCommand: |
-      echo "🚀 Iniciando servidor UI..."
-      node packages/ui/server.js
+    buildCommand: npm install
+    startCommand: node packages/ui/server.js
     envVars:
       - key: NODE_VERSION
         value: 22.23.1
@@ -50,27 +34,31 @@ services:
         value: 10000
       - key: API_URL
         value: https://agent-office.onrender.com
-    healthCheckPath: /
 
   # ============================================================
-  # OPCIONAL: REDIS (para caché y estado compartido)
+  # SERVICIO 3: PIXEL AGENTS (NUEVO)
   # ============================================================
-  # - type: docker
-  #   name: agent-office-redis
-  #   image: redis:alpine
-  #   plan: free
-
-  # ============================================================
-  # OPCIONAL: OLLAMA (modelos de IA locales)
-  # ============================================================
-  # - type: docker
-  #   name: agent-office-ollama
-  #   image: ollama/ollama
-  #   plan: free
-  #   envVars:
-  #     - key: OLLAMA_HOST
-  #       value: 0.0.0.0
-  #   disk:
-  #     name: ollama-data
-  #     mountPath: /root/.ollama
-  #     sizeGB: 5
+  - type: web
+    name: pixel-agents-web
+    runtime: node
+    plan: free
+    buildCommand: |
+      cd pixel-agents-repo
+      npm install
+      npm run build
+    startCommand: |
+      cd pixel-agents-repo
+      npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.23.1
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+    disk:
+      name: pixel-agents-data
+      mountPath: /app/pixel-agents-repo/data
+      sizeGB: 1
