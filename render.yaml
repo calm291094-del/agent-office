@@ -1,0 +1,35 @@
+# render.yaml - Configuración para Render
+services:
+  # Servidor backend (Colyseus + API)
+  - type: web
+    name: agent-office-server
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start --workspace=@agent-office/server
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: OLLAMA_API_URL
+        value: http://localhost:11434
+
+  # Servidor frontend (UI con Phaser + React)
+  - type: web
+    name: agent-office-ui
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start --workspace=@agent-office/ui
+    plan: free
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: NODE_ENV
+        value: production
+      - key: VITE_SERVER_URL
+        value: https://agent-office-server.onrender.com
+      - key: VITE_WS_URL
+        value: wss://agent-office-server.onrender.com
