@@ -16,80 +16,93 @@ interface Agent {
 }
 
 // ============================================================
-// SPRITES PIXEL ART EN BASE64
+// SPRITES DE CDN GRATUITOS (Pixel Art)
 // ============================================================
-const SPRITES = {
-    // Agente 1 (personaje azul)
-    agent1: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAABdklEQVRYhe2Wz0rDQBDGfzvVNFCNkFBRQY/iwT4AiAdfQW9eBaEXD4L4RnoUQfSm/6WIVyG9eBIEQTSi5rCp0qbZJk2y+wXaWAxJNvvNb/ORAF4TRV3Xf0m2IRgbO2t1fwz7IDBDwBcIGg4z5WmCQh0wHlYrYAym1JCApP86e13ak3hCBVJNwLtwBhkxH0DMgGgygmhPjf6tARq5fQHjMP/DGGmAXDK/5zI2rQpFAsKwYHkmqRBzDpjxI94n96/0+F4rhPK5LBSW0oEnSJJF80DaRynadE6h8AAGJQCQzMMcIDVDzGu0PTGmCH1d9f6gj4eTbK8OB4N0Z9iQy0w6fQTCWShQMBt4oOwpcw8E8UQ4E7NA+4Td/1umQUHEBsAR+QhK0jtzTEhSo0Gh16dIIsjW/RlJS+AA9lC4omP+SCSpt6cBxUV6HQOejQGnT+5+8T4XcM/wDfAHn9O+2QLGGmQ22brP5d8SYA9cLcC+Kwfw/HC+Abt1P+wUfO3uAAAAAElFTkSuQmCC',
+const SPRITE_URLS = {
+    // Agentes (personajes pixel art de código abierto)
+    agent1: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/agent1.png',
+    agent2: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/agent2.png',
+    agent3: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/agent3.png',
     
-    // Agente 2 (personaje rojo)
-    agent2: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAABbUlEQVRYhe2Wv0rDUBjFnzSNtdaBJoUWoUjp0kXwARx8BZ25KQ7t5CgI4kt00wEW0aVOglKqS5ciLkKB2ilVKU0MibS9zU3j3dJ8CEhIbsi9H985nHME8J8p2rbtD7I5wQR5rDcGZxMAgHfA4RQRh8kyoAH+ygHMw7ACzNjfP2I++SUcQcTfB4w2HXg7xLCeIhMA90DunGseAiA+JpVMkDfeZdyXi0CEHhCPh1i/jxSLxUVg4WI7mDvTMPDQFiyXuZ9MQQlQbs8yBQTAsQzsRAEIf1L6jXqlxO98xrjgARU+ELDAANJUGGAuYSE6EVEYks5JjQCzUQAtESkpQjI7XcYv9+vQ3QjGzIx9piYzswWEM84CwWxi/UIY4BNUN3BQvTL7F/8MAEL9wPwBzDqhDSJXhE3q3aPv39O3TfYNfA/iADoYCQ+MH3zN2c29jge9FphYfz7g7AX4A5/uQ2eXWZ0HAAAAAElFTkSuQmCC',
+    // Escritorio
+    desk: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/desk.png',
     
-    // Agente 3 (personaje verde)
-    agent3: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAABfklEQVRYhe2WPUvDUBiFnzRprbVKdBD8AtuliyA4uDk4Ogid1E0w/gPpxT8gWEWnLs4KUhBcsot0q6CDf8HWSkM+Qk1bG5Kb5I3mpjQgAgnJkHtyH849hH4BBG3b/iTZhGBs7KzV/TFsg8AMAV8gaDjMlKcJCnXAeFgtgDGYUkMCkv7r7HVpT+IJFUg1Ae/CGWTEPAziOmA6GUG0p0b/1gCN3L6AcZj/IYw0QC6Z33MZm1aFIgFhWLA8k1SIOQfM+BHvk/tXenyvFUL5XBYKS+nAEyTJonkg7aMUbTqnUHgAAxIASOZhDpCaIeY12p4YU4S+rnp/0MfDSbZXh4NBujNsyGUm1z4B4SwUKJgNPFD2lLkHgnhCnIlZoH3C7v8t06CgBweBwymZTU7mCgBy2oygDTCp7nOeiQExB8x4k3qX3L/S43utEMrnsnDy8CJkAcBc2A5m7fREdAiK7WBm72EmyiFTADQ9MNPAVPfaY/eYkFuMVLn0ArPUHS3AF8Vaw1d6P7NwAAAAAElFTkSuQmCC',
-    
-    // Escritorio pixel art
-    desk: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAAzUlEQVRYhe2WwQ2CMBRF35d0A+TqBsrALsC6gQ4mjgzqCMqQ7vSnxVsrQdhCG6UJb/Jem9A3vyEnQZAkiX3uA1oD9kC9DewcQAgBQohrhgCQUiKEUEJ/3p1z4JxzD2xmhpkhtxFO2xbk15OBgNauElLrI4YAglKKyE9tJRCAP2E1UJYliqJAURQQQmD4hBCCpmkghPj+R0jFMAxI0xRaa7TtREQEURShaRok8zAAwDBkSZJAVz2e53kIoIE+0DWl7mQghGjw+fiZ7N83Pnv0AJKLc8id77IYAAAAAElFTkSuQmCC',
-    
-    // Piso de la oficina
-    floor: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAAqklEQVRYhe2WwQ2DMAxF30tH6AqM0BEYgQ2yQRUYgRU6QndgBIboCBmBLkyRSuoUGcUpQTzpu7T4xXo+GIiIbjqC9/5KfA6gj9ZitLYd0lpkpM/5FwgoisI451C3LcZhsCqCgBAiAIiIDt7n59r/BeB1hOD9+AFwzvnPXV4CArquQ1mW0FqjKAqUZQmtNR4POIaAEIJbLpfLYRiG34KUUllPGgIYhxU0TUNreVWv5Xie5weHm37akLe7LwAAAABJRU5ErkJggg=='
+    // Piso
+    floor: 'https://raw.githubusercontent.com/calm291094-del/agent-office/main/pixel-agents-repo/shared/assets/sprites/floor.png'
 };
 
 // ============================================================
-// ESCENA DE PHASER
+// ESCENA DE PHASER CON SPRITES DE CDN
 // ============================================================
 class OfficeScene extends Phaser.Scene {
     private agents: Agent[] = [];
-    private agentSprites: Map<number, Phaser.GameObjects.Image> = new Map();
+    private agentSprites: Map<number, Phaser.GameObjects.Sprite> = new Map();
     private agentNames: Map<number, Phaser.GameObjects.Text> = new Map();
+    private statusTexts: Map<number, Phaser.GameObjects.Text> = new Map();
     private speechBubble: Phaser.GameObjects.Text | null = null;
     private speechTimer: number = 0;
-    private statusTexts: Map<number, Phaser.GameObjects.Text> = new Map();
+    private ws: WebSocket | null = null;
+    private isConnected: boolean = false;
+    private gameStarted: boolean = false;
 
     constructor() {
         super('OfficeScene');
     }
 
     // ============================================================
-    // PRECARGA DE SPRITES
+    // PRECARGA DE SPRITES DESDE CDN
     // ============================================================
     preload() {
-        // Cargar sprites de agentes
-        this.load.image('agent1', SPRITES.agent1);
-        this.load.image('agent2', SPRITES.agent2);
-        this.load.image('agent3', SPRITES.agent3);
+        // Cargar sprites desde CDN
+        this.load.image('agent1', SPRITE_URLS.agent1);
+        this.load.image('agent2', SPRITE_URLS.agent2);
+        this.load.image('agent3', SPRITE_URLS.agent3);
+        this.load.image('desk', SPRITE_URLS.desk);
+        this.load.image('floor', SPRITE_URLS.floor);
         
-        // Cargar sprites de oficina
-        this.load.image('desk', SPRITES.desk);
-        this.load.image('floor', SPRITES.floor);
+        // Mostrar progreso de carga
+        this.load.on('progress', (value: number) => {
+            console.log(`Cargando sprites: ${Math.round(value * 100)}%`);
+        });
+        
+        this.load.on('complete', () => {
+            console.log('✅ Todos los sprites cargados correctamente');
+        });
+        
+        this.load.on('loaderror', (file: any) => {
+            console.warn(`⚠️ Error cargando sprite: ${file.key}`, file.url);
+        });
     }
 
     // ============================================================
     // CREACIÓN DE LA ESCENA
     // ============================================================
     create() {
-        // 1. Piso de la oficina (patrón de baldosas)
-        const floorPattern = this.add.image(400, 300, 'floor');
-        floorPattern.setScale(20);
-        floorPattern.setTint(0x2d3748);
-
+        // 1. Fondo de la oficina (color sólido)
+        this.add.graphics().fillStyle(0x2d3748, 1).fillRect(0, 0, 800, 600);
+        
         // 2. Dibujar escritorios con sprites
         const desks = [
             { x: 120, y: 120 }, { x: 320, y: 120 }, { x: 520, y: 120 },
             { x: 120, y: 320 }, { x: 320, y: 320 }, { x: 520, y: 320 }
         ];
         desks.forEach(pos => {
-            const desk = this.add.image(pos.x, pos.y, 'desk');
-            desk.setScale(1.8);
+            // Usar sprite de escritorio si está cargado, si no, usar gráfico simple
+            if (this.textures.exists('desk')) {
+                const desk = this.add.image(pos.x, pos.y, 'desk');
+                desk.setScale(1.5);
+            } else {
+                // Fallback: dibujar un rectángulo
+                const desk = this.add.graphics();
+                desk.fillStyle(0x4a5563, 1);
+                desk.fillRect(pos.x - 25, pos.y - 20, 50, 40);
+            }
             
-            // Etiqueta del escritorio
-            this.add.text(pos.x - 15, pos.y + 25, '💻', {
-                fontSize: '16px',
-                fontFamily: 'Segoe UI, sans-serif'
-            });
+            // Ícono de computadora
+            this.add.text(pos.x - 10, pos.y - 10, '💻', { fontSize: '24px' });
         });
 
-        // 3. Inicializar contenedores de agentes
+        // 3. Inicializar contenedores
         this.agentSprites = new Map();
         this.agentNames = new Map();
         this.statusTexts = new Map();
@@ -109,11 +122,26 @@ class OfficeScene extends Phaser.Scene {
         this.speechBubble.setVisible(false);
         this.speechBubble.setOrigin(0.5, 0);
 
-        // 5. Cargar agentes desde la API
+        // 5. Iniciar el juego (activar audio con interacción)
+        this.input.on('pointerdown', () => {
+            if (!this.gameStarted) {
+                this.gameStarted = true;
+                // Reanudar audio si es necesario
+                if (this.sound) {
+                    this.sound.resumeAll();
+                }
+                console.log('🎮 Juego activado por interacción del usuario');
+            }
+        });
+
+        // 6. Cargar agentes desde la API
         this.loadAgentsFromAPI();
 
-        // 6. Conectar WebSocket
+        // 7. Conectar WebSocket
         this.connectWebSocket();
+
+        // 8. Mostrar mensaje de bienvenida
+        this.showSpeechBubble('🎮 Haz clic en la pantalla para activar el audio', 3000);
     }
 
     // ============================================================
@@ -127,7 +155,6 @@ class OfficeScene extends Phaser.Scene {
             this.updateAgents(agents);
         } catch (error) {
             console.error('Error cargando agentes:', error);
-            // Cargar agentes de respaldo si la API falla
             this.loadFallbackAgents();
         }
     }
@@ -165,14 +192,29 @@ class OfficeScene extends Phaser.Scene {
             const x = agent.x || (100 + (index % 5) * 140);
             const y = agent.y || (100 + Math.floor(index / 5) * 180);
 
-            // Seleccionar sprite según el ID
+            // Seleccionar sprite según el ID (alternar entre 1, 2, 3)
             const spriteKey = `agent${(agent.id % 3) + 1}`;
-            const sprite = this.add.image(x, y, spriteKey);
-            sprite.setScale(2);
-            sprite.setInteractive();
+            
+            let sprite: Phaser.GameObjects.Sprite | Phaser.GameObjects.Graphics;
+            
+            // Usar sprite si está cargado, si no, usar un círculo de color
+            if (this.textures.exists(spriteKey)) {
+                sprite = this.add.sprite(x, y, spriteKey);
+                (sprite as Phaser.GameObjects.Sprite).setScale(2);
+                (sprite as Phaser.GameObjects.Sprite).setInteractive();
+            } else {
+                // Fallback: círculo de color
+                const graphics = this.add.graphics();
+                const color = parseInt(agent.color.replace('#', ''), 16);
+                graphics.fillStyle(color, 1);
+                graphics.fillCircle(0, 0, 25);
+                graphics.x = x;
+                graphics.y = y;
+                graphics.setInteractive();
+                sprite = graphics;
+            }
 
-            // Guardar referencia del sprite
-            this.agentSprites.set(agent.id, sprite);
+            this.agentSprites.set(agent.id, sprite as any);
 
             // Nombre del agente
             const nameText = this.add.text(x - 20, y - 45, agent.name, {
@@ -187,7 +229,7 @@ class OfficeScene extends Phaser.Scene {
             nameText.setOrigin(0.5, 0);
             this.agentNames.set(agent.id, nameText);
 
-            // Estado del agente con color
+            // Estado del agente
             const statusColors: Record<string, string> = {
                 'working': '#10b981',
                 'thinking': '#f59e0b',
@@ -205,14 +247,20 @@ class OfficeScene extends Phaser.Scene {
             statusText.setOrigin(0.5, 0);
             this.statusTexts.set(agent.id, statusText);
 
-            // Interacción al hacer clic en el agente
+            // Evento de clic
             sprite.on('pointerdown', () => {
-                // Cambiar estado vía WebSocket
+                // Activar audio si no está activo
+                if (!this.gameStarted) {
+                    this.gameStarted = true;
+                    if (this.sound) {
+                        this.sound.resumeAll();
+                    }
+                }
                 this.sendAgentAction(agent.id, 'working');
                 this.showSpeechBubble(`💬 ${agent.name}: ¡Hola! Soy ${agent.role}`, 3000);
             });
 
-            // Animación de "respiración" para agentes activos
+            // Animación de respiración
             if (agent.status === 'working' || agent.status === 'thinking') {
                 this.tweens.add({
                     targets: sprite,
@@ -241,7 +289,6 @@ class OfficeScene extends Phaser.Scene {
             });
         }
         
-        // Actualizar también el nombre y estado si existen
         const nameText = this.agentNames.get(agentId);
         if (nameText) {
             this.tweens.add({
@@ -280,10 +327,8 @@ class OfficeScene extends Phaser.Scene {
             statusText.setColor(statusColors[status] || '#94a3b8');
         }
 
-        // Actualizar animación del sprite
         const sprite = this.agentSprites.get(agentId);
         if (sprite) {
-            // Detener animaciones existentes
             this.tweens.killTweensOf(sprite);
             sprite.setScale(2);
             
@@ -324,8 +369,6 @@ class OfficeScene extends Phaser.Scene {
     // ============================================================
     // WEBSOCKET
     // ============================================================
-    private ws: WebSocket | null = null;
-
     connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -334,8 +377,9 @@ class OfficeScene extends Phaser.Scene {
         
         this.ws.onopen = () => {
             console.log('✅ WebSocket conectado');
-            // Mostrar estado en la UI
+            this.isConnected = true;
             this.showSpeechBubble('🔵 Conectado al servidor', 2000);
+            this.events.emit('ws-status', true);
         };
 
         this.ws.onmessage = (event) => {
@@ -349,13 +393,16 @@ class OfficeScene extends Phaser.Scene {
 
         this.ws.onerror = (error) => {
             console.error('❌ WebSocket error:', error);
+            this.isConnected = false;
             this.showSpeechBubble('🔴 Error de conexión', 3000);
+            this.events.emit('ws-status', false);
         };
 
         this.ws.onclose = () => {
             console.log('❌ WebSocket desconectado');
+            this.isConnected = false;
             this.showSpeechBubble('🔴 Desconectado, reconectando...', 3000);
-            // Reconectar después de 5 segundos
+            this.events.emit('ws-status', false);
             setTimeout(() => {
                 if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
                     this.connectWebSocket();
@@ -375,11 +422,9 @@ class OfficeScene extends Phaser.Scene {
             case 'agent-update':
                 if (data.agent) {
                     const agent = data.agent as Agent;
-                    // Actualizar en la lista local
                     const index = this.agents.findIndex(a => a.id === agent.id);
                     if (index !== -1) {
                         this.agents[index] = agent;
-                        // Actualizar en UI
                         this.updateAgentStatus(agent.id, agent.status);
                     }
                 }
@@ -401,7 +446,6 @@ class OfficeScene extends Phaser.Scene {
                 
             case 'agent-created':
                 if (data.agent) {
-                    // Actualizar lista de agentes
                     this.agents.push(data.agent);
                     this.renderAgents();
                     this.showSpeechBubble(`🎉 Nuevo agente: ${data.agent.name}`, 3000);
@@ -422,23 +466,6 @@ class OfficeScene extends Phaser.Scene {
             }));
         }
     }
-
-    sendAgentSpeech(agentId: number, text: string) {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(JSON.stringify({
-                type: 'agent-speech',
-                agentId: agentId,
-                text: text
-            }));
-        }
-    }
-
-    // ============================================================
-    // UPDATE CICLO (opcional)
-    // ============================================================
-    update() {
-        // Aquí se puede agregar lógica de actualización continua si es necesario
-    }
 }
 
 // ============================================================
@@ -446,12 +473,11 @@ class OfficeScene extends Phaser.Scene {
 // ============================================================
 function App() {
     const gameContainerRef = useRef<HTMLDivElement>(null);
-    const [game, setGame] = useState<Phaser.Game | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
         if (gameContainerRef.current) {
-            const newGame = new Phaser.Game({
+            const game = new Phaser.Game({
                 type: Phaser.AUTO,
                 parent: gameContainerRef.current,
                 width: 800,
@@ -461,22 +487,22 @@ function App() {
                 scale: {
                     mode: Phaser.Scale.FIT,
                     autoCenter: Phaser.Scale.CENTER_BOTH
+                },
+                // Configuración para evitar errores de audio
+                audio: {
+                    noAudio: true // Desactiva el audio completamente
                 }
             });
 
-            setGame(newGame);
-
-            // Verificar conexión WebSocket cada 5 segundos
-            const interval = setInterval(() => {
-                const scene = newGame.scene.getScene('OfficeScene') as OfficeScene;
-                if (scene && scene.ws) {
-                    setIsConnected(scene.ws.readyState === WebSocket.OPEN);
-                }
-            }, 5000);
+            const scene = game.scene.getScene('OfficeScene') as OfficeScene;
+            if (scene) {
+                scene.events.on('ws-status', (status: boolean) => {
+                    setIsConnected(status);
+                });
+            }
 
             return () => {
-                clearInterval(interval);
-                newGame.destroy(true);
+                game.destroy(true);
             };
         }
     }, []);
@@ -498,7 +524,6 @@ function App() {
                 boxShadow: '0 20px 60px rgba(0,0,0,0.8)'
             }} />
             
-            {/* Indicador de estado de conexión */}
             <div style={{
                 position: 'absolute',
                 bottom: '20px',
