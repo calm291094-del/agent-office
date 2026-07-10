@@ -36,7 +36,7 @@ services:
         value: https://agent-office.onrender.com
 
   # ============================================================
-  # SERVICIO 3: PIXEL AGENTS (NUEVO)
+  # SERVICIO 3: PIXEL AGENTS (CORREGIDO)
   # ============================================================
   - type: web
     name: pixel-agents-web
@@ -45,10 +45,11 @@ services:
     buildCommand: |
       cd pixel-agents-repo
       npm install
-      npm run build
+      mkdir -p webview-ui/dist
+      cp -r webview-ui/dist webview-ui/dist
     startCommand: |
       cd pixel-agents-repo
-      npm start
+      node server.js
     envVars:
       - key: NODE_VERSION
         value: 22.23.1
@@ -56,9 +57,3 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: HOST
-        value: 0.0.0.0
-    disk:
-      name: pixel-agents-data
-      mountPath: /app/pixel-agents-repo/data
-      sizeGB: 1
